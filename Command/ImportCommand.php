@@ -2,6 +2,9 @@
 namespace Mathielen\ImportEngineBundle\Command;
 
 use Ddeboer\DataImport\Filter\OffsetFilter;
+use Ddeboer\DataImport\Filter\DateTimeThresholdFilter;
+use Ddeboer\DataImport\ValueConverter\DateTimeValueConverter;
+use Mathielen\DataImport\ValueConverter\GenericDateItemConverter;
 use Mathielen\DataImport\Event\ImportItemEvent;
 use Mathielen\ImportEngine\Event\ImportConfigureEvent;
 use Mathielen\ImportEngine\Event\ImportRequestEvent;
@@ -35,6 +38,8 @@ class ImportCommand extends ContainerAwareCommand
             ->addOption('importer', 'i', InputOption::VALUE_REQUIRED, 'id/name of importer')
             ->addOption('context', 'c', InputOption::VALUE_REQUIRED, 'Supply optional context information to import. Supply key-value data in query style: key=value&otherkey=othervalue&...')
             ->addOption('limit', 'l', InputOption::VALUE_REQUIRED, 'Limit imported rows')
+            ->addOption('date_filter_date', null, InputOption::VALUE_REQUIRED, 'Date to date filter', null)
+            ->addOption('date_filter_column', null, InputOption::VALUE_REQUIRED, 'Column to date filter', 'updated_at')
             ->addOption('dryrun', 'd', InputOption::VALUE_NONE, 'Do not import - Validation only')
         ;
     }
@@ -63,10 +68,13 @@ class ImportCommand extends ContainerAwareCommand
         }
         $limit = $input->getOption('limit');
 
-        $this->import($output, $importerId, $sourceProviderId, $sourceId, $context, $limit, $isDryrun);
+        $dateFilterDate = $input->getOption('date_filter_date');
+        $dateFilterColumn = $input->getOption('date_filter_column');
+
+        $this->import($output, $importerId, $sourceProviderId, $sourceId, $context, $limit, $isDryrun, $dateFilterDate, $dateFilterColumn);
     }
 
-    protected function import(OutputInterface $output, $importerId, $sourceProviderId, $sourceId, $context=null, $limit=null, $isDryrun=false)
+    protected function import(OutputInterface $output, $importerId, $sourceProviderId, $sourceId, $context=null, $limit=null, $isDryrun=false, $dateFilterDate=null, $dateFilterColumn=null)
     {
         $output->writeln("Commencing ".($isDryrun?'<comment>dry-run</comment> ':'')."import using importer ".(empty($importerId)?'<comment>unknown</comment>':"<info>$importerId</info>")." with source provider <info>$sourceProviderId</info> and source id <info>$sourceId</info>");
 
@@ -79,6 +87,20 @@ class ImportCommand extends ContainerAwareCommand
 
             $this->getContainer()->get('event_dispatcher')->addListener(ImportConfigureEvent::AFTER_BUILD, function (ImportConfigureEvent $event) use ($limit) {
                 $event->getImport()->importer()->filters()->add(new OffsetFilter(0, $limit));
+            });
+        }
+
+        if($dateFilterDate){
+            $output->writeln(sprintf('Filter date import to <info>%s %s</info> rows.', $dateFilterDate, $dateFilterColumn));
+
+            $this->getContainer()->get('event_dispatcher')->addListener(ImportConfigureEvent::AFTER_BUILD, function (ImportConfigureEvent $event) use ($dateFilterDate, $dateFilterColumn) {
+                $event->getImport()->importer()->filters()->add(new DateTimeThresholdFilter(
+                    new DateTimeValueConverter(),
+//                    new GenericDateItemConverter(),
+                    new \DateTime($dateFilterDate),
+//                    $dateFilterDate,
+                    $dateFilterColumn
+                ));
             });
         }
 
