@@ -10,7 +10,7 @@ class MathielenImportEngineBundle extends Bundle
 
     public function build(ContainerBuilder $container)
     {
-        $container->addExpressionLanguageProvider(new ExpressionLanguageProvider());
+//        $container->addExpressionLanguageProvider(new ExpressionLanguageProvider());
 
         return parent::build($container);
     }
