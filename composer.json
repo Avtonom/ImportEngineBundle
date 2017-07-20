@@ -1,12 +1,12 @@
 {
-  "name": "mathielen/import-engine-bundle",
+  "name": "avtonom/mathielen-import-engine-bundle",
   "type": "symfony-bundle",
   "description": "A generic import (and export) -engine that provides easy to use yet powerful features",
   "keywords": [
     "csv",
     "import"
   ],
-  "homepage": "https://github.com/mathielen/ImportEngineBundle",
+  "homepage": "https://github.com/Avtonom/ImportEngineBundle",
   "license": "MIT",
   "authors": [
     {
@@ -16,7 +16,7 @@
   ],
   "require": {
     "php": ">=5.5.0",
-    "mathielen/import-engine": ">=0.8.6",
+    "avtonom/mathielen-import-engine": "~0.9",
     "symfony/framework-bundle": "~2.4|3.0.*"
   },
   "require-dev": {
